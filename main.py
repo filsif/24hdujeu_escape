@@ -90,7 +90,7 @@ def main(stdscr):
 
                 win.addch(y,rightX,' ')
                 win.move(y,rightX)
-        elif ch == curses.KEY_ENTER or ch == 459 or ch==13:
+        elif ch == curses.KEY_ENTER or ch == 459 or ch==13 or ch==10:
             '''
             ENTER LINUX = 343 = KEY_ENTER
             ENTER WINDOWS = 459
@@ -140,7 +140,7 @@ def main(stdscr):
                     win.addch(ch)
                     login += chr(ch)
                 elif y == LINE_PASSWORD:
-                    win.addch(ord('�'))
+                    win.addch(ord('*'))
                     password += chr(ch)
                 rightX +=1
                 win.move(y , rightX)
