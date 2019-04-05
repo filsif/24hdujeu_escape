@@ -7,6 +7,89 @@ from prompt_toolkit.layout.containers import HSplit, Window, FloatContainer, Flo
 from prompt_toolkit.layout.controls import FormattedTextControl, BufferControl
 from prompt_toolkit.layout.layout import Layout
 from prompt_toolkit.layout.menus import CompletionsMenu
+from prompt_toolkit.layout.processors import BeforeInput,ShowArg
+from prompt_toolkit.document import Document
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.history import InMemoryHistory
+
+import datetime
+
+
+
+class ShellPrompt():
+    def __init__(self , output):
+        self._shelloutput = output
+        self._commands = [ 'grant' , 'help' ,'test' ,'clear' ,'quit']
+
+        self._commands_help = [ 'syntax is grant [user] [superuser|normal]' ,
+                                'help lists all commands.\n help [command] show help for the command' ,
+                                'allow you to test if the antidote is ok' ,
+                                'clear the terminal']
+
+        self._shell_completer    = WordCompleter( self._commands , ignore_case=True)
+
+        self._buffer = Buffer( multiline=False , accept_handler = self.accept , auto_suggest = AutoSuggestFromHistory() , enable_history_search=True , completer=self._shell_completer)
+        self._buffercontrol = BufferControl(buffer=self._buffer ,input_processors=[ BeforeInput('root@prof:/home/prof# ') ] )
+        self._window = Window( self._buffercontrol , style='class:term' , height=1)
+
+    def accept(self ,buff):
+        buf_split = buff.text.split()
+        if buf_split[0] in self._commands:
+            getattr(self, "do_" + buf_split[0])(buf_split)
+        else:
+            self.do_unknown(buff.text)
+
+
+    def do_grant(self,list):
+        pass
+
+    def do_help(self,list):
+        if len(list) == 1:
+            string = "commands are : "
+            for elem in self._commands:
+                string += "["+elem + "] "
+            self._shelloutput.push(string )
+
+
+
+
+
+    def do_test(self,list):
+        pass
+    def do_clear(self,list):
+        self._shelloutput.clear()
+
+    def do_unknown(self,txt):
+        self._shelloutput.push("unknown command ["+txt+"]")
+
+    def do_quit(self,list):
+        pass
+
+    @property
+    def window(self):
+        return self._window
+
+
+class ShellOutput():
+    def __init__(self):
+        self._buffer = Buffer( multiline=True )
+        self._buffercontrol = BufferControl(buffer=self._buffer )
+        self._window = Window( self._buffercontrol , style='class:term' )
+
+    @property
+    def window(self):
+        return self._window
+
+    def push(self, text):
+
+
+        string = datetime.datetime.now().strftime( '%H:%M:%S:%f')
+        new_text = self._buffer.text + string + ' - ' + text+'\n'
+        self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
+
+    def clear(self):
+        new_text = ""
+        self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
 
 
 class ShellForm():
@@ -14,34 +97,30 @@ class ShellForm():
         self._main              = mainapp
         self._app               = self._main.application
 
-        self._shell_completer    = WordCompleter([
-                                    'alligator', 'ant', 'ape', 'bat', 'bear', 'beaver', 'bee', 'bison',
-                                    'butterfly', 'cat', 'chicken', 'crocodile', 'dinosaur', 'dog', 'dolphin',
-                                    'dove', 'duck', 'eagle', 'elephant', 'fish', 'goat', 'gorilla', 'kangaroo',
-                                    'leopard', 'lion', 'mouse', 'rabbit', 'rat', 'snake', 'spider', 'turkey',
-                                    'turtle',
-                                ], ignore_case=True)
-
-
         self._kb                = KeyBindings()
+        self._shelloutput       = ShellOutput()
+        self._shellprompt       = ShellPrompt(self._shelloutput )
 
 
-        self._buffer            = Buffer( completer=self._shell_completer, complete_while_typing=True )
-
-        self._container         = FloatContainer(content=HSplit([   Window(FormattedTextControl('Press "q" to quit.'), height=1, style='class:term.inv'),
-                                                                    Window(BufferControl(buffer=self._buffer) , style='class:term') ] , key_bindings = self._kb),
+        self._container         = FloatContainer(content= HSplit([ Window(FormattedTextControl('Press "q" to quit.'), height=1, style='class:term.inv'),
+                                                                   self._shellprompt.window,
+                                                                   self._shelloutput.window ] ,key_bindings = self._kb ),
                                                  floats=[Float(xcursor=True,ycursor=True,content=CompletionsMenu(max_height=16, scroll_offset=1))])
 
-        self._layout            = Layout( container=self._container , focused_element=self._buffer )
+        self._layout            = Layout( container=self._container  , focused_element= self._shellprompt.window )
+
+
 
         @self._kb.add('q')
         @self._kb.add('c-c')
         def _(event):
             " Quit application. "
             event.app.exit()
-        @self._kb.add('c-e')
-        def _(event):
-            self._main.changeLayout('LOGIN')
+
+
+
+
+
 
 
     @property
