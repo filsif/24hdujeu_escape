@@ -34,10 +34,12 @@ class ShellPrompt():
 
     def accept(self ,buff):
         buf_split = buff.text.split()
-        if buf_split[0] in self._commands:
-            getattr(self, "do_" + buf_split[0])(buf_split)
-        else:
-            self.do_unknown(buff.text)
+
+        if len(buf_split)>0:
+            if buf_split[0] in self._commands:
+                getattr(self, "do_" + buf_split[0])(buf_split)
+            else:
+                self.do_unknown(buff.text)
 
 
     def do_grant(self,list):
@@ -49,9 +51,10 @@ class ShellPrompt():
             for elem in self._commands:
                 string += "["+elem + "] "
             self._shelloutput.push(string )
-
-
-
+        elif len(list) == 2:
+            if list[1] in self._commands:
+                idx = self._commands.index(list[1])
+                self._shelloutput.push(self._commands_help[idx] )
 
 
     def do_test(self,list):
@@ -84,7 +87,7 @@ class ShellOutput():
 
 
         string = datetime.datetime.now().strftime( '%H:%M:%S:%f')
-        new_text = self._buffer.text + string + ' - ' + text+'\n'
+        new_text =  string + ' - ' + text+'\n' +self._buffer.text
         self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
 
     def clear(self):
@@ -102,7 +105,7 @@ class ShellForm():
         self._shellprompt       = ShellPrompt(self._shelloutput )
 
 
-        self._container         = FloatContainer(content= HSplit([ Window(FormattedTextControl('Press "q" to quit.'), height=1, style='class:term.inv'),
+        self._container         = FloatContainer(content= HSplit([ Window(FormattedTextControl('Press "ctrl-c" to quit.'), height=1, style='class:term.inv'),
                                                                    self._shellprompt.window,
                                                                    self._shelloutput.window ] ,key_bindings = self._kb ),
                                                  floats=[Float(xcursor=True,ycursor=True,content=CompletionsMenu(max_height=16, scroll_offset=1))])
@@ -111,7 +114,7 @@ class ShellForm():
 
 
 
-        @self._kb.add('q')
+
         @self._kb.add('c-c')
         def _(event):
             " Quit application. "
