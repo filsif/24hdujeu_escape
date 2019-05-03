@@ -14,37 +14,103 @@ from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.filters import Condition
 
 import datetime
-
 import threading
-
 import time
+import os
+
+from nfc import NfcCardReader
 
 
 class monThread(threading.Thread):
-    def __init__(self, jusqua, shelloutput):
+    def __init__(self,  shelloutput):
         threading.Thread.__init__(self)
-        self.jusqua = jusqua
+
         self.shelloutput = shelloutput
 
 
     def run(self):
-        self.shelloutput.nfc = True
-        self.shelloutput.push("avant thread")
-        time.sleep(self.jusqua)
-        self.shelloutput.push("apres thread")
-        self.shelloutput.nfc = False
+        self.shelloutput.nfc_lock = True
+        self.shelloutput.push("Welcome to the antidote tester.")
+
+        self.shelloutput.push("Please insert the first element.")
+
+        antidote = []
+        nfc= NfcCardReader()
+
+        ret,id,label = nfc.parseBlock()
+        if ret == True:
+            antidote.append(label)
+            self.shelloutput.push("OK. Please insert the second element.")
+            time.sleep(10)
+
+            ret,id,label = nfc.parseBlock()
+            if ret==True:
+                antidote.append(label)
+                self.shelloutput.push("OK. Please insert the third element.")
+
+
+                ret,id,label = nfc.parseBlock()
+                if ret == True:
+                    antidote.append(label)
+                    self.shelloutput.push("OK. Please insert the fourth element.")
+
+
+                    ret,id,label = nfc.parseBlock()
+                    if ret==True:
+                        antidote.append(label)
+                        self.shelloutput.push("OK. I have the four components. Now melting.")
+                        time.sleep(1)
+                        self.shelloutput.push("Melting...")
+                        time.sleep(1)
+                        self.shelloutput.push("Melting...")
+                        time.sleep(1)
+                        self.shelloutput.push("Melting...")
+                        time.sleep(1)
+                        self.shelloutput.push("Melting ( pfff )...")
+                        time.sleep(1)
+                        self.shelloutput.push("again Melting...")
+                        time.sleep(5)
+                        a = str(antidote)
+
+                        if antidote[0]=='element 1' and antidote[1] =='element 2' and antidote[2] == 'element 3' and antidote[3]=='element 4':
+                            self.shelloutput.push("Congratulations... you was able to make the antidote !!!!")
+                            os.system("/usr/bin/eject /dev/sr0")
+                        else:
+                            self.shelloutput.push("Sorry, please try later")
+
+
+                    else:
+                        self.shelloutput.push("No component detected... returning back to the shell.")
+
+
+                else:
+                    self.shelloutput.push("No component detected... returning back to the shell.")
+
+
+            else:
+                self.shelloutput.push("No component detected... returning back to the shell.")
+
+
+        else:
+            self.shelloutput.push("No component detected... returning back to the shell")
+
+
+
+        self.shelloutput.nfc_lock = False
 
 
 
 class ShellPrompt():
     def __init__(self , output):
         self._shelloutput = output
-        self._commands = [ 'grant' , 'help' ,'test' ,'clear' ,'quit']
+        self._commands = [ 'grant' , 'help' ,'test' ,'clear' ,  'cdrom','quit']
 
         self._commands_help = [ 'syntax is grant [user] [superuser|normal]' ,
                                 'help lists all commands.\n help [command] show help for the command' ,
                                 'allow you to test if the antidote is ok' ,
-                                'clear the terminal']
+                                'clear the terminal',
+                                'syntax is cdrom [open|close]',
+                                'return to login prompt']
 
         self._shell_completer    = WordCompleter( self._commands , ignore_case=True)
 
@@ -65,6 +131,18 @@ class ShellPrompt():
     def do_grant(self,list):
         pass
 
+    def do_cdrom(self,list):
+
+        if len(list) == 2:
+            opt = list[1]
+
+            if opt=="open":
+                os.system("/usr/bin/eject /dev/sr0")
+            elif opt=="close":
+                os.system("/usr/bin/eject -t /dev/sr0")
+
+
+
     def do_help(self,list):
         if len(list) == 1:
             string = "commands are : "
@@ -78,8 +156,8 @@ class ShellPrompt():
 
 
     def do_test(self,list):
-        #self._buffer.read_only(True)
-        a = monThread(10, self._shelloutput)
+
+        a = monThread( self._shelloutput)
         a.start()
 
     def do_clear(self,list):
@@ -101,7 +179,7 @@ class ShellOutput():
         self._buffer = Buffer( multiline=True )
         self._buffercontrol = BufferControl(buffer=self._buffer )
         self._window = Window( self._buffercontrol , style='class:term' )
-        self.nfc = False
+        self.nfc_lock = False
 
     @property
     def window(self):
@@ -140,7 +218,7 @@ class ShellForm():
 
         @Condition
         def is_active():
-            return self._shelloutput.nfc
+            return self._shelloutput.nfc_lock
 
         @self._kb.add( '<any>', filter=is_active)
         def _(event):

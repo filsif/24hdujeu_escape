@@ -26,6 +26,7 @@ class MainApp:
                                 ('term.inv',    'bg:#00FF00 #000000'),
                                 ('title', 'bg:#000044 #ffffff underline'),
                                 ])
+    
 
         self.application        = Application(  layout=None,
                                         style=self.style,
@@ -39,6 +40,7 @@ class MainApp:
 
 
         self.application.run()
+
 
     def __del__(self):
         pass
