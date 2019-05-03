@@ -11,8 +11,28 @@ from prompt_toolkit.layout.processors import BeforeInput,ShowArg
 from prompt_toolkit.document import Document
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.filters import Condition
 
 import datetime
+
+import threading
+
+import time
+
+
+class monThread(threading.Thread):
+    def __init__(self, jusqua, shelloutput):
+        threading.Thread.__init__(self)
+        self.jusqua = jusqua
+        self.shelloutput = shelloutput
+
+
+    def run(self):
+        self.shelloutput.nfc = True
+        self.shelloutput.push("avant thread")
+        time.sleep(self.jusqua)
+        self.shelloutput.push("apres thread")
+        self.shelloutput.nfc = False
 
 
 
@@ -58,7 +78,10 @@ class ShellPrompt():
 
 
     def do_test(self,list):
-        pass
+        #self._buffer.read_only(True)
+        a = monThread(10, self._shelloutput)
+        a.start()
+
     def do_clear(self,list):
         self._shelloutput.clear()
 
@@ -78,6 +101,7 @@ class ShellOutput():
         self._buffer = Buffer( multiline=True )
         self._buffercontrol = BufferControl(buffer=self._buffer )
         self._window = Window( self._buffercontrol , style='class:term' )
+        self.nfc = False
 
     @property
     def window(self):
@@ -114,6 +138,13 @@ class ShellForm():
 
 
 
+        @Condition
+        def is_active():
+            return self._shelloutput.nfc
+
+        @self._kb.add( '<any>', filter=is_active)
+        def _(event):
+            pass
 
         @self._kb.add('c-c')
         def _(event):
