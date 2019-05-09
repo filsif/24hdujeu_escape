@@ -64,10 +64,10 @@ class NfcCardReader():
     def __del__(self):
         pass
 
-    def parseBlock(self):
+    def parseBlock(self, ttt):
 
         blk = []
-        if self.readBlocks(10 , blk)== True:
+        if self.readBlocks(10 , blk , ttt)== True:
 
 
             work = blk
@@ -124,7 +124,7 @@ class NfcCardReader():
 
 
 
-    def readBlocks(self , to , totalBlk):
+    def readBlocks(self , to , totalBlk , func ):
 
         try:
             self.cardrequest = CardRequest(timeout=to, cardType=self.cardtype)
@@ -136,12 +136,16 @@ class NfcCardReader():
 
                 for blk in range( 0x4 , 0x3F):
                     #retirer block keyA/access/keyB
+
                     if blk%4 != 3:
+
                         if self.authBlock( blk) == True:
                             curBlk = []
                             if self.readBlock( blk , curBlk) == True:
 
                                 totalBlk+= curBlk
+                                if func is not None:
+                                    func( int(blk / 64 * 100))
                             else:
                                 #print("failed to read block num " + str(blk))
                                 return False
@@ -150,7 +154,7 @@ class NfcCardReader():
                             return False
                 self.cardservice.connection.disconnect()
 
-
+                func(100)                
                 cr = CardRequest()
                 while True:
                     ce = cr.waitforcardevent()
@@ -169,25 +173,39 @@ class NfcCardReader():
             #print("no card within 10 sec.")
             return False
     def loadAuthKey(self):
-        payload = self.apdu.loadAuthKey( self.key_id,None )
-        _, sw1, sw2 = self.cardservice.connection.transmit(payload)
-        if sw1 == 0x90 and sw2 == 0x00:
-            return True
+        try:
+            payload = self.apdu.loadAuthKey( self.key_id,None )
+            _, sw1, sw2 = self.cardservice.connection.transmit(payload)
+            if sw1 == 0x90 and sw2 == 0x00:
+                return True
+        except:
+            return False
         return False
 
     def authBlock(self, blk):
-        payload = self.apdu.authenticate(blk , "typeB" , self.key_id )
-        _, sw1, sw2 = self.cardservice.connection.transmit(payload)
-        if sw1 == 0x90 and sw2 == 0x00:
-            return True
-        return False
+        try:
+
+            payload = self.apdu.authenticate(blk , "typeB" , self.key_id )
+            _, sw1, sw2 = self.cardservice.connection.transmit(payload)
+            if sw1 == 0x90 and sw2 == 0x00:
+                #print("auth block num [" + hex(blk) + "] ok")
+                return True
+            #print("ERROR auth block num ["+hex(blk) +"] "  + hex(sw1) + " " + hex(sw2) )
+            return False
+        except:
+            return False
     def readBlock (self, blk, data):
-        payload = self.apdu.readBinaryBlock(blk , 0x10 )
-        d, sw1, sw2 = self.cardservice.connection.transmit(payload)
-        if sw1 == 0x90 and sw2 == 0x00:
-            data+=d
-            return True
-        return False
+        try:
+            payload = self.apdu.readBinaryBlock(blk , 0x10 )
+            d, sw1, sw2 = self.cardservice.connection.transmit(payload)
+            if sw1 == 0x90 and sw2 == 0x00:
+                #print("read block num [" + hex(blk) + "] ok")
+                data+=d
+                return True
+            #print("ERROR read block num ["+hex(blk) +"] "  + hex(sw1) + " " + hex(sw2) )
+            return False
+        except:
+            return False
 
 
 class PrintCardObserver(CardObserver):

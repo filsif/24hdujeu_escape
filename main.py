@@ -25,8 +25,10 @@ class MainApp:
                                 ('term',    '#00FF00'),
                                 ('term.inv',    'bg:#00FF00 #000000'),
                                 ('title', 'bg:#000044 #ffffff underline'),
+                                ('progress-bar' , 'bg:#000000'),
+                                ('progress-bar.used' , 'bg:#00FF00')
                                 ])
-    
+
 
         self.application        = Application(  layout=None,
                                         style=self.style,
@@ -45,11 +47,14 @@ class MainApp:
     def __del__(self):
         pass
 
-    def changeLayout(self,  type):
+    def changeLayout(self,  type, **kwargs):
         if type == 'LOGIN':
+
             self.application.layout = self.loginform.layout
         elif type =='SHELL':
-            self.application.layout = self.shellform.layout
+            if kwargs['login'] is not None:
+                self.shellform.login = kwargs.get('login')
+                self.application.layout = self.shellform.layout
 
 
 

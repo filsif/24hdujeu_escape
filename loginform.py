@@ -78,7 +78,10 @@ class LoginForm():
             p = self._text_curpassword.text
             if l ==self._login and p ==self._password:
                 self.valid = True
-                self._main.changeLayout('SHELL')
+                self._text_curlogin.text =""
+                self._text_curpassword.text=""
+                self._app.layout.focus(self._text_curlogin)
+                self._main.changeLayout('SHELL' , login=self._login )
             else:
                 self._text_curlogin.text =''
                 self._text_curpassword.text =''

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
+
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout.containers import HSplit, Window, FloatContainer, Float
@@ -12,6 +13,8 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.filters import Condition
+from prompt_toolkit.widgets import ProgressBar
+from prompt_toolkit.styles import Style
 
 import datetime
 import threading
@@ -22,40 +25,54 @@ from nfc import NfcCardReader
 
 
 class monThread(threading.Thread):
-    def __init__(self,  shelloutput):
+    def __init__(self,  shelloutput , shellprogress):
         threading.Thread.__init__(self)
 
         self.shelloutput = shelloutput
+        self.shellprogress = shellprogress
 
 
     def run(self):
         self.shelloutput.nfc_lock = True
+
+
+
         self.shelloutput.push("Welcome to the antidote tester.")
 
         self.shelloutput.push("Please insert the first element.")
 
+
         antidote = []
         nfc= NfcCardReader()
 
-        ret,id,label = nfc.parseBlock()
+        def progress( range):
+            self.shellprogress.percentage = range
+            if range == 100:
+                self.shelloutput.push("you can remove the component.")
+            else:
+                self.shelloutput.flush()
+
+        self.shellprogress.percentage = 0
+        ret,id,label = nfc.parseBlock( progress )
         if ret == True:
             antidote.append(label)
             self.shelloutput.push("OK. Please insert the second element.")
-            time.sleep(10)
 
-            ret,id,label = nfc.parseBlock()
+
+            self.shellprogress.percentage = 0
+            ret,id,label = nfc.parseBlock( progress )
             if ret==True:
                 antidote.append(label)
                 self.shelloutput.push("OK. Please insert the third element.")
 
-
-                ret,id,label = nfc.parseBlock()
+                self.shellprogress.percentage = 0
+                ret,id,label = nfc.parseBlock( progress )
                 if ret == True:
                     antidote.append(label)
                     self.shelloutput.push("OK. Please insert the fourth element.")
 
-
-                    ret,id,label = nfc.parseBlock()
+                    self.shellprogress.percentage = 0
+                    ret,id,label = nfc.parseBlock( progress )
                     if ret==True:
                         antidote.append(label)
                         self.shelloutput.push("OK. I have the four components. Now melting.")
@@ -96,27 +113,58 @@ class monThread(threading.Thread):
 
 
 
+        self.shellprogress.percentage = 0
         self.shelloutput.nfc_lock = False
 
 
 
 class ShellPrompt():
-    def __init__(self , output):
-        self._shelloutput = output
-        self._commands = [ 'grant' , 'help' ,'test' ,'clear' ,  'cdrom','quit']
+    def __init__(self , main ,header , output , progress ):
+        self._main              = main
+        self._superuser         = False
 
-        self._commands_help = [ 'syntax is grant [user] [superuser|normal]' ,
-                                'help lists all commands.\n help [command] show help for the command' ,
-                                'allow you to test if the antidote is ok' ,
-                                'clear the terminal',
-                                'syntax is cdrom [open|close]',
-                                'return to login prompt']
+        self._login             = ""
+        self._password          = "psyCZJNG"
+        self._header            = header
+        self._shelloutput       = output
+        self._shellprogress     = progress
+        self._commands          = [ 'grant' , 'help' ,'test' ,'clear' ,  'cdrom','quit']
 
-        self._shell_completer    = WordCompleter( self._commands , ignore_case=True)
+        self._commands_help     = [ 'syntax is grant [user] [superuser|normal] [password]' ,
+                                    'help lists all commands.\n help [command] show help for the command' ,
+                                    'allow you to test if the antidote is ok' ,
+                                    'clear the terminal, [history] the history, [all] both terminal and history',
+                                    'syntax is cdrom [open|close]',
+                                    'return to login prompt']
 
-        self._buffer = Buffer( multiline=False , accept_handler = self.accept , auto_suggest = AutoSuggestFromHistory() , enable_history_search=True , completer=self._shell_completer)
-        self._buffercontrol = BufferControl(buffer=self._buffer ,input_processors=[ BeforeInput('root@prof:/home/prof# ') ] )
-        self._window = Window( self._buffercontrol , style='class:term' , height=1)
+        self._shell_completer   = WordCompleter( self._commands , ignore_case=True)
+
+        self._buffer            = Buffer( multiline=False , accept_handler = self.accept , auto_suggest = AutoSuggestFromHistory() , enable_history_search=True , completer=self._shell_completer)
+        self._buffercontrol     = BufferControl(buffer=self._buffer ,input_processors=[ BeforeInput('root@prof:/home/prof# ') ] )
+        self._window            = Window( self._buffercontrol , style='class:term' , height=1)
+
+    @property
+    def login(self):
+        return self._login
+    @login.setter
+    def login(self,value):
+        self._login = value
+
+    @property
+    def pw(self):
+        return self._password
+    @pw.setter
+    def pw(self,value):
+        self._password = value
+
+    @property
+    def su(self):
+        return self._superuser
+
+    @su.setter
+    def su(self,value):
+        self._superuser = value
+
 
     def accept(self ,buff):
         buf_split = buff.text.split()
@@ -129,17 +177,34 @@ class ShellPrompt():
 
 
     def do_grant(self,list):
-        pass
+        if len(list) == 4:
+            if list[1] == self.login and list[3] == self.pw:
+                if list[2] =="superuser":
+                    self._header.text = 'Press "ctrl-c" to quit. * superuser *'
+                    self.su = True
+                elif list[2]== "normal":
+                    self._header.text = 'Press "ctrl-c" to quit.'
+                    self.su = False
+                else:
+                    self._shelloutput.push("syntax is grant [user] [superuser|normal] [password]")
+            else:
+                self._shelloutput.push("syntax is grant [user] [superuser|normal] [password]")
+        else:
+            self._shelloutput.push("syntax is grant [user] [superuser|normal] [password]")
+
 
     def do_cdrom(self,list):
+        if self.su == True:
+            if len(list) == 2:
+                opt = list[1]
 
-        if len(list) == 2:
-            opt = list[1]
+                if opt=="open":
+                    os.system("/usr/bin/eject /dev/sr0")
+                elif opt=="close":
+                    os.system("/usr/bin/eject -t /dev/sr0")
+        else:
+            self._shelloutput.push("You are not allowed to use this command")
 
-            if opt=="open":
-                os.system("/usr/bin/eject /dev/sr0")
-            elif opt=="close":
-                os.system("/usr/bin/eject -t /dev/sr0")
 
 
 
@@ -157,17 +222,34 @@ class ShellPrompt():
 
     def do_test(self,list):
 
-        a = monThread( self._shelloutput)
+        a = monThread( self._shelloutput, self._shellprogress)
         a.start()
 
     def do_clear(self,list):
-        self._shelloutput.clear()
+        if len(list)==1:
+            self._shelloutput.clear()
+        elif len(list)==2:
+            if list[1]=='term':
+                self._shelloutput.clear()
+            elif list[1]=='history':
+                self._shelloutput._buffer.history = InMemoryHistory()
+                pass
+            elif list[1]=='all':
+                self._shelloutput._buffer.history = InMemoryHistory()
+                self._shelloutput.clear()
+
+        else:
+            self._shelloutput.push('syntax is :clear [term|history|all]')
+
 
     def do_unknown(self,txt):
         self._shelloutput.push("unknown command ["+txt+"]")
 
     def do_quit(self,list):
-        pass
+        self.su = False
+        self._header.text = 'Press "ctrl-c" to quit.'
+        self._shelloutput.clear()
+        self._main.changeLayout('LOGIN' )
 
     @property
     def window(self):
@@ -186,15 +268,17 @@ class ShellOutput():
         return self._window
 
     def push(self, text):
-
-
         string = datetime.datetime.now().strftime( '%H:%M:%S:%f')
         new_text =  string + ' - ' + text+'\n' +self._buffer.text
         self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
 
-    def clear(self):
-        new_text = ""
+    def flush(self):
+        new_text = datetime.datetime.now().strftime( '%H:%M:%S:%f') + self._buffer.text[15:]
         self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
+
+    def clear(self):
+        self._buffer.reset()
+
 
 
 class ShellForm():
@@ -202,12 +286,18 @@ class ShellForm():
         self._main              = mainapp
         self._app               = self._main.application
 
+
         self._kb                = KeyBindings()
+        self._header            = FormattedTextControl('Press "ctrl-c" to quit.')
         self._shelloutput       = ShellOutput()
-        self._shellprompt       = ShellPrompt(self._shelloutput )
+        self._shellprogress     = ProgressBar()
+        self._shellprompt       = ShellPrompt(self._main ,self._header  , self._shelloutput , self._shellprogress )
+        self._shellprogress.percentage = 0
 
 
-        self._container         = FloatContainer(content= HSplit([ Window(FormattedTextControl('Press "ctrl-c" to quit.'), height=1, style='class:term.inv'),
+
+        self._container         = FloatContainer(content= HSplit([ Window(self._header, height=1, style='class:term.inv'),
+                                                                   self._shellprogress,
                                                                    self._shellprompt.window,
                                                                    self._shelloutput.window ] ,key_bindings = self._kb ),
                                                  floats=[Float(xcursor=True,ycursor=True,content=CompletionsMenu(max_height=16, scroll_offset=1))])
@@ -216,15 +306,20 @@ class ShellForm():
 
 
 
+
         @Condition
         def is_active():
             return self._shelloutput.nfc_lock
+
+        @Condition
+        def is_su():
+            return self._shellprompt.su
 
         @self._kb.add( '<any>', filter=is_active)
         def _(event):
             pass
 
-        @self._kb.add('c-c')
+        @self._kb.add('c-c', filter=is_su)
         def _(event):
             " Quit application. "
             event.app.exit()
@@ -232,7 +327,12 @@ class ShellForm():
 
 
 
-
+    @property
+    def login(self):
+        return self._shellprompt.login
+    @login.setter
+    def login(self,value):
+        self._shellprompt.login = value
 
 
     @property
