@@ -16,6 +16,8 @@ from prompt_toolkit.filters import Condition
 from prompt_toolkit.widgets import ProgressBar
 from prompt_toolkit.styles import Style
 
+from cdrom import Cdrom
+
 import datetime
 import threading
 import time
@@ -25,9 +27,10 @@ from nfc import NfcCardReader
 
 
 class monThread(threading.Thread):
-    def __init__(self,  shelloutput , shellprogress):
+    def __init__(self,  shelloutput , shellprogress, cdrom):
         threading.Thread.__init__(self)
 
+        self.cdrom = cdrom
         self.shelloutput = shelloutput
         self.shellprogress = shellprogress
 
@@ -91,7 +94,7 @@ class monThread(threading.Thread):
 
                         if antidote[0]=='element 1' and antidote[1] =='element 2' and antidote[2] == 'element 3' and antidote[3]=='element 4':
                             self.shelloutput.push("Congratulations... you was able to make the antidote !!!!")
-                            os.system("/usr/bin/eject /dev/sr0")
+                            self.cdrom.open()
                         else:
                             self.shelloutput.push("Sorry, please try later")
 
@@ -122,6 +125,8 @@ class ShellPrompt():
     def __init__(self , main ,header , output , progress ):
         self._main              = main
         self._superuser         = False
+
+        self._cdrom             = Cdrom()
 
         self._login             = ""
         self._password          = "psyCZJNG"
@@ -199,9 +204,9 @@ class ShellPrompt():
                 opt = list[1]
 
                 if opt=="open":
-                    os.system("/usr/bin/eject /dev/sr0")
+                    self._cdrom.open()
                 elif opt=="close":
-                    os.system("/usr/bin/eject -t /dev/sr0")
+                    self._cdrom.close()
         else:
             self._shelloutput.push("You are not allowed to use this command")
 
@@ -222,7 +227,7 @@ class ShellPrompt():
 
     def do_test(self,list):
 
-        a = monThread( self._shelloutput, self._shellprogress)
+        a = monThread(self._shelloutput, self._shellprogress, self._cdrom)
         a.start()
 
     def do_clear(self,list):
