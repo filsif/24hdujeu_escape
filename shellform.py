@@ -27,15 +27,48 @@ from nfc import NfcCardReader
 
 
 class monThread(threading.Thread):
-    def __init__(self,  shelloutput , shellprogress, cdrom):
+    def __init__(self,  shelloutput , shellprogress, cdrom, choice):
         threading.Thread.__init__(self)
 
         self.cdrom = cdrom
         self.shelloutput = shelloutput
         self.shellprogress = shellprogress
 
+        self.run_choice = None
 
+        if choice=="test":
+            self.run_choice = self.run_test
+        elif choice=="check":
+            self.run_choice = self.run_check
     def run(self):
+        self.run_choice()
+
+    def run_check(self):
+        self.shelloutput.nfc_lock = True
+
+        self.shelloutput.push("Please put the element to check.")
+
+        nfc= NfcCardReader()
+
+        def progress( range):
+            self.shellprogress.percentage = range
+            if range == 100:
+                self.shelloutput.push("you can remove the component.")
+            else:
+                self.shelloutput.flush()
+
+        self.shellprogress.percentage = 0
+        ret,id,label = nfc.parseBlock( progress )
+        if ret == True:
+            self.shelloutput.push("the element is : " + label)
+        else:
+            self.shelloutput.push("No component detected or wrong detection.")
+
+        self.shellprogress.percentage = 0
+        self.shelloutput.nfc_lock = False
+
+
+    def run_test(self):
         self.shelloutput.nfc_lock = True
 
 
@@ -133,11 +166,12 @@ class ShellPrompt():
         self._header            = header
         self._shelloutput       = output
         self._shellprogress     = progress
-        self._commands          = [ 'grant' , 'help' ,'test' ,'clear' ,  'cdrom','quit']
+        self._commands          = [ 'grant' , 'help' ,'test' ,'check','clear' ,  'cdrom','quit']
 
         self._commands_help     = [ 'syntax is grant [user] [superuser|normal] [password]' ,
                                     'help lists all commands.\n help [command] show help for the command' ,
                                     'allow you to test if the antidote is ok' ,
+                                    'check an element'
                                     'clear the terminal, [history] the history, [all] both terminal and history',
                                     'syntax is cdrom [open|close]',
                                     'return to login prompt']
@@ -210,7 +244,13 @@ class ShellPrompt():
         else:
             self._shelloutput.push("You are not allowed to use this command")
 
+    def do_check(self,list):
+        if self.su == True:
+            a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"check")
+            a.start()
 
+        else:
+            self._shelloutput.push("You are not allowed to use this command")
 
 
     def do_help(self,list):
@@ -227,7 +267,7 @@ class ShellPrompt():
 
     def do_test(self,list):
 
-        a = monThread(self._shelloutput, self._shellprogress, self._cdrom)
+        a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"test")
         a.start()
 
     def do_clear(self,list):
