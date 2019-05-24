@@ -234,13 +234,14 @@ class ShellPrompt():
 
     def do_cdrom(self,list):
         if self.su == True:
-            if len(list) == 2:
+            if len(list) == 3:
                 opt = list[1]
+                type = list[2]
 
                 if opt=="open":
-                    self._cdrom.open()
+                    self._cdrom.open(type)
                 elif opt=="close":
-                    self._cdrom.close()
+                    self._cdrom.close(type)
         else:
             self._shelloutput.push("You are not allowed to use this command")
 
