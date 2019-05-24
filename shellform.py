@@ -369,6 +369,10 @@ class ShellForm():
         def _(event):
             " Quit application. "
             event.app.exit()
+            
+        @self._kb.add('c-w')
+        def _(event):
+            event.app.exit()
 
 
 
