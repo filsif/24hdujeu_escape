@@ -27,29 +27,54 @@ from nfc import NfcCardReader
 
 
 class monThread(threading.Thread):
-    def __init__(self,  shelloutput , shellprogress, cdrom, choice):
+    def __init__(self,  shelloutput , shellprogress, cdrom, choice , comb ):
         threading.Thread.__init__(self)
 
         self.cdrom = cdrom
         self.shelloutput = shelloutput
         self.shellprogress = shellprogress
+        self.comb = comb
+
+        self.log_mon = [
+        {"text" : "OK. I have all the components. Now melting." , "timeout" : 1},
+        {"text" : "Melting" , "timeout" : 1},
+        {"text" : "Melting" , "timeout" : 1},
+        {"text" : "Melting (pfff)...", "timeout" : 1},
+        {"text" : "Again Melting" , "timeout" : 5}
+
+        ]
 
         self.run_choice = None
+        self._nfc = None
+        self._antidote = None
 
-        if choice=="test":
-            self.run_choice = self.run_test
+        if choice=="test_true":
+            self.run_choice = self.run_test_true
+        elif choice=="test_false":
+            self.run_choice = self.run_test_false
         elif choice=="check":
             self.run_choice = self.run_check
+        elif choice=="generate":
+            self.run_choice = self.run_generate
     def run(self):
         self.run_choice()
 
-    def run_check(self):
+    def run_test_true(self):
+        self.run_test( "TRUE" )
+    def run_test_false(self):
+        self.run_test( "FALSE" )
+    def run_generate(self):
+        self.run_test(None)
+
+    def nfc_init(self,type=None):
         self.shelloutput.nfc_lock = True
 
-        self.shelloutput.push("Please put the element to check.")
+        if type is None:
+            self._antidote = []
+            self._nfc= NfcCardReader()
 
-        nfc= NfcCardReader()
 
+    def nfc_read(self,type=None):
         def progress( range):
             self.shellprogress.percentage = range
             if range == 100:
@@ -57,100 +82,81 @@ class monThread(threading.Thread):
             else:
                 self.shelloutput.flush()
 
+        progress(0)
+        if type is None:
+            ret,id,label = self._nfc.parseBlock( progress )
+            if ret == True:
+                self._antidote.append(label)
+                return True , label
+            return False , None
+        else:
+            '''
+            put progressb bar
+            '''
+            for i in range(1,100):
+                progress(i)
+                time.sleep(0.01)
+            progress(100)
+            return True , None
+
+    def nfc_shut(self):
         self.shellprogress.percentage = 0
-        ret,id,label = nfc.parseBlock( progress )
+        self.shelloutput.nfc_lock = False
+
+    def nfc_show_result(self,type):
+        for elem in self.log_mon:
+            self.shelloutput.push(elem['text'])
+            time.sleep(elem['timeout'])
+
+        if type is None:
+            '''test antidote'''
+            self.shelloutput.push("Congratulations... you was able to make the antidote !!!!")
+            if self._antidote == self.comb:
+
+                self.cdrom.open("TRUE")
+            else:
+                self.cdrom.open("FALSE")
+        else:
+            self.shelloutput.push("open cdrom " + type)
+            self.cdrom.open(type)
+
+
+    def run_check(self):
+        self.nfc_init()
+
+        self.shelloutput.push("Please put the element to check.")
+
+        ret, label = self.nfc_read()
         if ret == True:
             self.shelloutput.push("the element is : " + label)
         else:
             self.shelloutput.push("No component detected or wrong detection.")
 
-        self.shellprogress.percentage = 0
-        self.shelloutput.nfc_lock = False
+        self.nfc_shut()
 
+    def run_test(self , type ):
 
-    def run_test(self):
-        self.shelloutput.nfc_lock = True
-
-
+        self.nfc_init(type)
 
         self.shelloutput.push("Welcome to the antidote tester.")
+        test = True
+        i = 0
+        for elem in self.comb:
+            i = i+1
+            self.shelloutput.push("Please insert the element n° " + str(i))
+            ret,_ = self.nfc_read(type)
+            if ret == False:
+                test = False
+                self.shelloutput.push("No component detected... returning back to the shell")
+                break
 
-        self.shelloutput.push("Please insert the first element.")
-
-
-        antidote = []
-        nfc= NfcCardReader()
-
-        def progress( range):
-            self.shellprogress.percentage = range
-            if range == 100:
-                self.shelloutput.push("you can remove the component.")
-            else:
-                self.shelloutput.flush()
-
-        self.shellprogress.percentage = 0
-        ret,id,label = nfc.parseBlock( progress )
-        if ret == True:
-            antidote.append(label)
-            self.shelloutput.push("OK. Please insert the second element.")
-
-
-            self.shellprogress.percentage = 0
-            ret,id,label = nfc.parseBlock( progress )
-            if ret==True:
-                antidote.append(label)
-                self.shelloutput.push("OK. Please insert the third element.")
-
-                self.shellprogress.percentage = 0
-                ret,id,label = nfc.parseBlock( progress )
-                if ret == True:
-                    antidote.append(label)
-                    self.shelloutput.push("OK. Please insert the fourth element.")
-
-                    self.shellprogress.percentage = 0
-                    ret,id,label = nfc.parseBlock( progress )
-                    if ret==True:
-                        antidote.append(label)
-                        self.shelloutput.push("OK. I have the four components. Now melting.")
-                        time.sleep(1)
-                        self.shelloutput.push("Melting...")
-                        time.sleep(1)
-                        self.shelloutput.push("Melting...")
-                        time.sleep(1)
-                        self.shelloutput.push("Melting...")
-                        time.sleep(1)
-                        self.shelloutput.push("Melting ( pfff )...")
-                        time.sleep(1)
-                        self.shelloutput.push("again Melting...")
-                        time.sleep(5)
-                        a = str(antidote)
-
-                        if antidote[0]=='element 1' and antidote[1] =='element 2' and antidote[2] == 'element 3' and antidote[3]=='element 4':
-                            self.shelloutput.push("Congratulations... you was able to make the antidote !!!!")
-                            self.cdrom.open()
-                        else:
-                            self.shelloutput.push("Sorry, please try later")
-
-
-                    else:
-                        self.shelloutput.push("No component detected... returning back to the shell.")
-
-
-                else:
-                    self.shelloutput.push("No component detected... returning back to the shell.")
-
-
-            else:
-                self.shelloutput.push("No component detected... returning back to the shell.")
-
-
-        else:
-            self.shelloutput.push("No component detected... returning back to the shell")
+        if test == True:
+            self.nfc_show_result(type)
 
 
 
-        self.shellprogress.percentage = 0
-        self.shelloutput.nfc_lock = False
+        self.nfc_shut()
+
 
 
 
@@ -166,14 +172,16 @@ class ShellPrompt():
         self._header            = header
         self._shelloutput       = output
         self._shellprogress     = progress
-        self._commands          = [ 'grant' , 'help' ,'test' ,'check','clear' ,  'cdrom','quit']
+        self._combinaison       = ['element 1' , 'element 2' , 'element 3']
+        self._commands          = [ 'grant' , 'help' ,'generate' , 'test' ,'check','clear' ,  'cdrom','quit']
 
         self._commands_help     = [ 'syntax is grant [user] [superuser|normal] [password]' ,
                                     'help lists all commands.\n help [command] show help for the command' ,
+                                    'generate the antidote',
                                     'allow you to test if the antidote is ok' ,
-                                    'check an element'
+                                    'check an element',
                                     'clear the terminal, [history] the history, [all] both terminal and history',
-                                    'syntax is cdrom [open|close]',
+                                    'syntax is cdrom [open|close] [TRUE|FALSE]',
                                     'return to login prompt']
 
         self._shell_completer   = WordCompleter( self._commands , ignore_case=True)
@@ -247,7 +255,7 @@ class ShellPrompt():
 
     def do_check(self,list):
         if self.su == True:
-            a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"check")
+            a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"check" , self._combinaison)
             a.start()
 
         else:
@@ -265,11 +273,21 @@ class ShellPrompt():
                 idx = self._commands.index(list[1])
                 self._shelloutput.push(self._commands_help[idx] )
 
+    def do_generate(self,list):
+        a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"generate" , self._combinaison )
+        a.start()
 
     def do_test(self,list):
-
-        a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"test")
-        a.start()
+        if self.su == True:
+            if len(list)==2:
+                if list[1] == "TRUE":
+                    test= "test_true"
+                else:
+                    test="test_false"
+                a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,test , self._combinaison)
+                a.start()
+        else:
+            self._shelloutput.push("You are not allowed to use this command")
 
     def do_clear(self,list):
         if len(list)==1:
@@ -369,7 +387,7 @@ class ShellForm():
         def _(event):
             " Quit application. "
             event.app.exit()
-            
+
         @self._kb.add('c-w')
         def _(event):
             event.app.exit()
