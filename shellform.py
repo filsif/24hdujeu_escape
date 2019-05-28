@@ -168,7 +168,7 @@ class ShellPrompt():
         self._cdrom             = Cdrom()
 
         self._login             = ""
-        self._password          = "psyCZJNG"
+        self._password          = "SsE4Ratq"
         self._header            = header
         self._shelloutput       = output
         self._shellprogress     = progress
