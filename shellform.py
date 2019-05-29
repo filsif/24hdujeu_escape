@@ -39,7 +39,7 @@ class monThread(threading.Thread):
         {"text" : "OK. I have all the components. Now melting." , "timeout" : 1},
         {"text" : "Melting" , "timeout" : 1},
         {"text" : "Melting" , "timeout" : 1},
-        {"text" : "Melting (pfff)...", "timeout" : 1},
+        {"text" : "Melting (pfff )...", "timeout" : 1},
         {"text" : "Again Melting" , "timeout" : 5}
 
         ]
