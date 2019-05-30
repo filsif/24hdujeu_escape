@@ -173,11 +173,11 @@ class ShellPrompt():
         self._shelloutput       = output
         self._shellprogress     = progress
         self._combinaison       = ['element 1' , 'element 2' , 'element 3']
-        self._commands          = [ 'grant' , 'help' ,'generate' , 'test' ,'check','clear' ,  'cdrom','quit']
+        self._commands          = [ 'grant' , 'help' ,'synthesis' , 'test' ,'check','clear' ,  'cdrom','quit']
 
         self._commands_help     = [ 'syntax is grant [user] [superuser|normal] [password]' ,
                                     'help lists all commands.\n help [command] show help for the command' ,
-                                    'generate the antidote',
+                                    'generate the antidote.Find the correct syntax',
                                     'allow you to test if the antidote is ok' ,
                                     'check an element',
                                     'clear the terminal, [history] the history, [all] both terminal and history',
@@ -214,13 +214,17 @@ class ShellPrompt():
 
 
     def accept(self ,buff):
-        buf_split = buff.text.split()
 
-        if len(buf_split)>0:
-            if buf_split[0] in self._commands:
-                getattr(self, "do_" + buf_split[0])(buf_split)
-            else:
-                self.do_unknown(buff.text)
+        if buff.text.startswith("synthesis",0,len(buff.text)):
+            self.do_synthesis(buff.text)
+        else:
+            buf_split = buff.text.split()
+
+            if len(buf_split)>0:
+                if buf_split[0] in self._commands:
+                    getattr(self, "do_" + buf_split[0])(buf_split)
+                else:
+                    self.do_unknown(buff.text)
 
 
     def do_grant(self,list):
@@ -273,9 +277,44 @@ class ShellPrompt():
                 idx = self._commands.index(list[1])
                 self._shelloutput.push(self._commands_help[idx] )
 
-    def do_generate(self,list):
-        a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"generate" , self._combinaison )
-        a.start()
+    def do_synthesis(self,buffer):
+        '''
+        right syntax is :
+        synthesis(x,T=1,ech=3,alternative=c(Nemesis),conf.level=0.95)
+        '''
+        synthesis = { 'first' :'x' , 'T' : '1' , 'ech' :'3' , 'alternative' :'c(Nemesis)' , 'conf.level' : '0.95' }
+
+        allparms=['T','ech','alternative','conf.level']
+        testparms=[]
+        test=False
+        try:
+            b = buffer[9:]
+
+            if b[0] == '(' and b[len(b)-1] ==')':
+                b = b[1:-1]
+                b_s = b.split(',')
+                if b_s[0]=='x':
+                    b_s=b_s[1:]
+                    test=True
+                    for elem in b_s:
+                        sp = elem.split('=')
+                        if synthesis[sp[0]] != sp[1]:
+                            test = False
+                        else:
+                            testparms.append(sp[0])
+                    if test==True:
+                        if sorted(testparms)==sorted(allparms):
+                            a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"generate" , self._combinaison )
+                            a.start()
+                            return                       
+        except:
+            pass
+        self._shelloutput.push("Incorrect syntax. Please try again.")
+
+
+
+
+
 
     def do_test(self,list):
         if self.su == True:
