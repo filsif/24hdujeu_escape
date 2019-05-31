@@ -5,6 +5,7 @@ import os
 class Cdrom():
 
     def __init__(self):
+        '''
         self.cdrom_true_name = "HL-DT-ST"
         self.cdrom_false_name = "ASUS"
         self.cmd = "dmesg | grep  `dmesg | grep %s | awk '{print $4}' |tail -1` | grep 'Attached scsi CD-ROM' | awk '{print $8}' |tail -1"
@@ -24,6 +25,9 @@ class Cdrom():
         if len(res)==1:
             self.cdrom_false = '/dev/' + res[0]
             self.cdrom_false = self.cdrom_false[:-1]
+        '''
+        self.cdrom_true     = '/dev/sr0'
+        self.cdrom_false    = '/dev/sr1'
 
 
 
