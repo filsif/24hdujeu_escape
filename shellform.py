@@ -168,7 +168,7 @@ class ShellPrompt():
         self._cdrom             = Cdrom()
 
         self._login             = ""
-        self._password          = "SsE4Ratq"
+        self._password          = "escape24"
         self._header            = header
         self._shelloutput       = output
         self._shellprogress     = progress
@@ -280,11 +280,11 @@ class ShellPrompt():
     def do_synthesis(self,buffer):
         '''
         right syntax is :
-        synthesis(x,T=1,ech=3,alternative=c(Nemesis),conf.level=0.95)
+        synthesis(x,t=1,ech=3,alt=nemesis,level=2)
         '''
-        synthesis = { 'first' :'x' , 'T' : '1' , 'ech' :'3' , 'alternative' :'c(Nemesis)' , 'conf.level' : '0.95' }
+        synthesis = { 'first' :'x' , 't' : '1' , 'ech' :'3' , 'alt' :'nemesis' , 'level' : '2' }
 
-        allparms=['T','ech','alternative','conf.level']
+        allparms=['t','ech','alt','level']
         testparms=[]
         test=False
         try:
@@ -306,7 +306,7 @@ class ShellPrompt():
                         if sorted(testparms)==sorted(allparms):
                             a = monThread(self._shelloutput, self._shellprogress, self._cdrom ,"generate" , self._combinaison )
                             a.start()
-                            return                       
+                            return
         except:
             pass
         self._shelloutput.push("Incorrect syntax. Please try again.")
