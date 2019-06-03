@@ -133,8 +133,8 @@ class NfcCardReader():
             self.cardservice.connection.connect()
 
             if self.loadAuthKey() == True:
-
-                for blk in range( 0x4 , 0x3F):
+                max = 10
+                for blk in range( 0x4 , max):
                     #retirer block keyA/access/keyB
 
                     if blk%4 != 3:
@@ -145,7 +145,7 @@ class NfcCardReader():
 
                                 totalBlk+= curBlk
 
-                                func( range=int(blk / 64 * 100))
+                                func( range=int(blk / max * 100))
                             else:
                                 func(msg="failed to read block num " + str(blk))
                                 self.cardservice.connection.disconnect()
@@ -154,26 +154,29 @@ class NfcCardReader():
                             func(msg="failed to auth block num "+ str(blk))
                             self.cardservice.connection.disconnect()
                             return False
-                self.cardservice.connection.disconnect()
+
 
 
                 func(range=100)
                 cr = CardRequest()
                 while True:
                     ce = cr.waitforcardevent()
-                    func(msg="waitforcardevent")
-                    time.sleep(0.3)
+                    #func(msg="waitforcardevent" + str(ce))
+                    time.sleep(0.05)
                     if len(ce)==0:
                         break
+                self.cardservice.connection.disconnect()
 
 
 
                 return True
             else:
+                self.cardservice.connection.disconnect()
                 func(msg="failed to load authkey")
                 return False
 
         except CardRequestTimeoutException:
+            self.cardservice.connection.disconnect()
             func(msg="no card within 10 sec.")
             return False
     def loadAuthKey(self):
