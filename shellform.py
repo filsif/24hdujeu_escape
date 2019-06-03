@@ -96,7 +96,8 @@ class monThread(threading.Thread):
                 else:
                     self.shelloutput.flush()
             if msg is not None:
-                self.shelloutput.push(msg)
+                pass
+                #self.shelloutput.push(msg)
 
         progress(range=0)
         if type is None:
