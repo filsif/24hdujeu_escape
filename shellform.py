@@ -75,14 +75,19 @@ class monThread(threading.Thread):
 
 
     def nfc_read(self,type=None):
-        def progress( range):
-            self.shellprogress.percentage = range
-            if range == 100:
-                self.shelloutput.push("you can remove the component.")
-            else:
-                self.shelloutput.flush()
+        def progress( **kwargs):
+            range = kwargs.get('range')
+            msg = kwargs.get('msg')
+            if range is not None:
+                self.shellprogress.percentage = range
+                if range == 100:
+                    self.shelloutput.push("you can remove the component.")
+                else:
+                    self.shelloutput.flush()
+            if msg is not None:
+                self.shelloutput.push(msg)
 
-        progress(0)
+        progress(range=0)
         if type is None:
             ret,id,label = self._nfc.parseBlock( progress )
             if ret == True:
@@ -94,9 +99,9 @@ class monThread(threading.Thread):
             put progressb bar
             '''
             for i in range(1,100):
-                progress(i)
+                progress(range=i)
                 time.sleep(0.01)
-            progress(100)
+            progress(range=100)
             return True , None
 
     def nfc_shut(self):
