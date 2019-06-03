@@ -21,8 +21,7 @@ class loggedThread(threading.Thread):
     def __init__(self,form):
         threading.Thread.__init__(self)
         self._form = form
-        self.log_connexion = []
-        self.t=[
+        self.log_connexion = [
             { 'text' : 'try to determinate route...' , 'timeout' : 1 },
             { 'text' :'1    <1 ms    <1 ms     1 ms  10.4.30.1', 'timeout' : 0.1 },
             { 'text' :'2     1 ms    <1 ms    <1 ms  172.16.12.250', 'timeout' : 0.1 },
@@ -41,21 +40,20 @@ class loggedThread(threading.Thread):
             { 'text' :'Your public key has been saved in /etc/ssh/public/key.pub.', 'timeout' : 0.1 },
             { 'text' :'The key fingerprint is:', 'timeout' : 0.1 },
             { 'text' :'28:aa:e1:5e:d3:c2:c8:14:1a:b3:b8:8f:95:8e:ad:12 root@sd-102108', 'timeout' : 0.1 },
-            { 'text' :'The key\'s randomart image is:', 'timeout' : 1 },
-            { 'text' :'+---[RSA 2048]----+', 'timeout' : 0.1 },
-            { 'text' :'|                 |', 'timeout' : 0.1 },
-            { 'text' :'|                 |', 'timeout' : 0.1 },
-            { 'text' :'|o.               |', 'timeout' : 0.1 },
-            { 'text' :'|o+.    .         |', 'timeout' : 0.1 },
-            { 'text' :'|+.  . . S        |', 'timeout' : 0.1 },
-            { 'text' :'|E.oo..           |', 'timeout' : 0.1 },
-            { 'text' :'|o++= .           |', 'timeout' : 0.1 },
-            { 'text' :'|oX. o            |', 'timeout' : 0.1 },
-            { 'text' :'|B++              |', 'timeout' : 0.1 },
-            { 'text' :'+-----------------+', 'timeout' : 0.1 },
-            { 'text' : 'Connecting to a23-217-231-118.deploy.static.akamaitechnologies.com:8868 ...' , 'timeout' : 3 },
-            { 'text' : 'Connected !!!' , 'timeout' : 1 },
-
+            { 'text' :'Loading asset' , 'timeout': 0.1 },
+            { 'text' :'|██╗   ██╗███╗   ███╗██████╗ ██████╗ ███████╗ ██╗     ██╗      █████╗      ██████╗ ██████╗ ██████╗ ██████╗ |', 'timeout' : 0.1 },
+            { 'text' :'|██║   ██║████╗ ████║██╔══██╗██╔══██╗██╔════╝ ██║     ██║     ██╔══██╗    ██╔════╝██╔═══██╗██╔══██╗██╔══██╗|', 'timeout' : 0.1 },
+            { 'text' :'|██║   ██║██╔████╔██║██████╔╝██████╔╝█████╗   ██║     ██║     ███████║    ██║     ██║   ██║██████╔╝██████╔╝|', 'timeout' : 0.1 },
+            { 'text' :'|██║   ██║██║╚██╔╝██║██╔══██╗██╔══██╗██╔══╝   ██║     ██║     ██╔══██║    ██║     ██║   ██║██╔══██╗██╔═══╝|', 'timeout' : 0.1 },
+            { 'text' :'|╚██████╔╝██║ ╚═╝ ██║██████╔╝██║  ██║███████╗ ███████╗███████╗██║  ██║    ╚██████╗╚██████╔╝██║  ██║██║██╗|', 'timeout' : 0.1 },
+            { 'text' :'|   ═════╝ ╚═╝     ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝ |', 'timeout' : 0.1 },
+            { 'text' : 'Connecting to a23-217-231-118.deploy.static.akamaitechnologies.com:8868 ...' , 'timeout' : 2 },
+            { 'text' :'Loading Project T', 'timeout' : 0.5 },
+            { 'text' :'Loading Project G', 'timeout' : 0.5 },
+            { 'text' :'Loading Project Nemesis', 'timeout' : 0.5 },
+            { 'text' :'Loading Protocole Veronica', 'timeout' : 0.5 },
+            { 'text' : 'Connected !' , 'timeout' : 0.5 },
+            { 'text' : 'Welcome Professor' , 'timeout' : 1 }
         ]
 
     def __del__(self):

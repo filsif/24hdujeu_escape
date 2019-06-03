@@ -36,12 +36,23 @@ class monThread(threading.Thread):
         self.comb = comb
 
         self.log_mon = [
-        {"text" : "OK. I have all the components. Now melting." , "timeout" : 1},
-        {"text" : "Melting" , "timeout" : 1},
-        {"text" : "Melting" , "timeout" : 1},
-        {"text" : "Melting (pfff )...", "timeout" : 1},
-        {"text" : "Again Melting" , "timeout" : 5}
-
+            {"text" : "All components checked. Now processing", "timeout"  : 3},
+            {"text" : "Reading DNA" , "timeout" : 1},
+            {"text" : "DNA read" , "timeout" : 0.1},
+            {"text" : "Fragmenting Coding DNA Sequence", "timeout" : 3},
+            {"text" : "Updating DNA database" , "timeout" : 0.1},
+            {"text" : "Processing PCR analisys" , "timeout" : 2},
+            {"text" : "Exctracting leukocyte" , "timeout" : 2},
+            {"text" : "Starting Leukocyte mutation" , "timeout" : 1},
+            {"text" : "Leukocyte ready" , "timeout" : 0.2},
+            {"text" : "Recombination of DNA sample" , "timeout" : 0.5},
+            {"text" : "Nanotrasformation with T project" , "timeout" : 0.5},
+            {"text" : "Nanotrasformation done" , "timeout" : 0.1},
+            {"text" : "Photosterilisation laser" , "timeout" : 2},
+            {"text" : "Project Nemesis immunotransformation" , "timeout" : 3},
+            {"text" : "Immunotransformation done" , "timeout" : 0.3},
+            {"text" : "Recombination" , "timeout" : 0.2},
+            {"text" : "Component created" , "timeout" : 2}
         ]
 
         self.run_choice = None
@@ -115,7 +126,7 @@ class monThread(threading.Thread):
 
         if type is None:
             '''test antidote'''
-            self.shelloutput.push("Congratulations... you was able to make the antidote !!!!")
+            self.shelloutput.push("OK synthesis completed.")
             if self._antidote == self.comb:
 
                 self.cdrom.open("TRUE")
