@@ -101,8 +101,8 @@ class LoginForm():
         self._valid             = False
         self._main              = mainapp
         self._app               = self._main.application
-        self._login             = "test"
-        self._password          = "test"
+        self._login             = "hercule"
+        self._password          = "virus"
         self._text_intro        = Window( FormattedTextControl(HTML('please log in')) , width = 42 , height = 1  ,style="class:term.inv", align = WindowAlign.CENTER)
 
 

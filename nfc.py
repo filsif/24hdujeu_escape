@@ -64,10 +64,10 @@ class NfcCardReader():
     def __del__(self):
         pass
 
-    def parseBlock(self, ttt):
+    def parseBlock(self, func=None):
 
         blk = []
-        if self.readBlocks(10 , blk , ttt)== True:
+        if self.readBlocks(10 , blk , func)== True:
 
 
             work = blk
@@ -109,17 +109,17 @@ class NfcCardReader():
                                     return False,None,None
 
                             else:
-                                pass#print("No type T payload :" , hex(type))
+                                not func and print("No type T payload :" , hex(type))
                         else:
-                            pass#print("No WKT payload")
+                            not func and print("No WKT payload")
                     else:
-                        pass#print("ID Field length present.")
+                        not func and print("ID Field length present.")
                 else:
-                    pass#print("no short len")
+                    not func and print("no short len")
             else:
-                pass#print("no single payload")
+                not fund and print("no single payload")
         else:
-            pass#print("error in reading blocks")
+            not func and print("error in reading blocks")
         return False,None,None
 
 
@@ -144,17 +144,18 @@ class NfcCardReader():
                             if self.readBlock( blk , curBlk) == True:
 
                                 totalBlk+= curBlk
-                                if func is not None:
-                                    func( int(blk / 64 * 100))
+
+                                func and func( int(blk / 64 * 100))
                             else:
-                                #print("failed to read block num " + str(blk))
+                                not func and print("failed to read block num " + str(blk))
                                 return False
                         else:
-                            #print("failed to auth block num "+ str(blk))
+                            not func and print("failed to auth block num "+ str(blk))
                             return False
                 self.cardservice.connection.disconnect()
 
-                func(100)                
+
+                func and func(100)
                 cr = CardRequest()
                 while True:
                     ce = cr.waitforcardevent()
@@ -166,11 +167,11 @@ class NfcCardReader():
 
                 return True
             else:
-                #print("failed to load authkey")
+                not func and print("failed to load authkey")
                 return False
 
         except CardRequestTimeoutException:
-            #print("no card within 10 sec.")
+            not func and print("no card within 10 sec.")
             return False
     def loadAuthKey(self):
         try:

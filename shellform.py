@@ -373,11 +373,11 @@ class ShellOutput():
     def push(self, text):
         string = datetime.datetime.now().strftime( '%H:%M:%S:%f')
         new_text =  string + ' - ' + text+'\n' +self._buffer.text
-        self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
+        self._buffer.document = Document( text = new_text , cursor_position = 0)
 
     def flush(self):
         new_text = datetime.datetime.now().strftime( '%H:%M:%S:%f') + self._buffer.text[15:]
-        self._buffer.document = Document( text = new_text , cursor_position = len(new_text))
+        self._buffer.document = Document( text = new_text , cursor_position = 0)
 
     def clear(self):
         self._buffer.reset()

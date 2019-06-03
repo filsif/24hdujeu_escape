@@ -26,7 +26,7 @@ class MainApp:
                                 ('term.inv',    'bg:#00FF00 #000000'),
                                 ('title', 'bg:#000044 #ffffff underline'),
                                 ('progress-bar' , 'bg:#000000'),
-                                ('progress-bar.used' , 'bg:#00FF00')
+                                ('progress-bar.used' , 'bg:#80FF80')
                                 ])
 
 
