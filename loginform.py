@@ -21,7 +21,8 @@ class loggedThread(threading.Thread):
     def __init__(self,form):
         threading.Thread.__init__(self)
         self._form = form
-        self.log_connexion = [
+        self.log_connexion = []
+        self.t=[
             { 'text' : 'try to determinate route...' , 'timeout' : 1 },
             { 'text' :'1    <1 ms    <1 ms     1 ms  10.4.30.1', 'timeout' : 0.1 },
             { 'text' :'2     1 ms    <1 ms    <1 ms  172.16.12.250', 'timeout' : 0.1 },
