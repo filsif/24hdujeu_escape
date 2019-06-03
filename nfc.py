@@ -148,9 +148,11 @@ class NfcCardReader():
                                 func( range=int(blk / 64 * 100))
                             else:
                                 func(msg="failed to read block num " + str(blk))
+                                self.cardservice.connection.disconnect()
                                 return False
                         else:
                             func(msg="failed to auth block num "+ str(blk))
+                            self.cardservice.connection.disconnect()
                             return False
                 self.cardservice.connection.disconnect()
 
@@ -159,6 +161,7 @@ class NfcCardReader():
                 cr = CardRequest()
                 while True:
                     ce = cr.waitforcardevent()
+                    func(msg="waitforcardevent")
                     time.sleep(0.3)
                     if len(ce)==0:
                         break
@@ -232,6 +235,9 @@ if __name__ == "__main__":
         msg = kwargs.get('msg')
         if msg is not None:
             print(msg)
+        range = kwargs.get('range')
+        if range is not None:
+            print("range :"+str(range))
 
     ret,id,label = nfc.parseBlock(func)
     if ret == True:
