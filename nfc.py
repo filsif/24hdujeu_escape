@@ -176,7 +176,7 @@ class NfcCardReader():
                 return False
 
         except CardRequestTimeoutException:
-            self.cardservice.connection.disconnect()
+            #self.cardservice.connection.disconnect()
             func(msg="no card within 10 sec.")
             return False
     def loadAuthKey(self):
