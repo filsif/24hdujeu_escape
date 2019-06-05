@@ -299,7 +299,7 @@ class ShellPrompt():
         right syntax is :
         synthesis(x,t=1,ech=3,alt=nemesis,level=2)
         '''
-        synthesis = { 'first' :'x' , 't' : '1' , 'ech' :'3' , 'alt' :'nemesis' , 'level' : '2' }
+        synthesis = { 'first' :'x' , 't' : '1' , 'ech' :'3' , 'alt' :'nemesis' , 'level' : '2a' }
 
         allparms=['t','ech','alt','level']
         testparms=[]
